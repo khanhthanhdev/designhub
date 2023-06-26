@@ -1,8 +1,13 @@
 'use client'
-import {ChangeEvent} from 'react'
+import {ChangeEvent, useState} from 'react'
 import { SessionInterface } from "@/common.types";
 import Image from 'next/image';
 import FormField from './FormField';
+import { categoryFilters } from '@/constants';
+import CustomMenu from './CustomMenu';
+import Button from './Button';
+import { createNewProject, fetchToken } from '@/lib/actions';
+import { useRouter } from 'next/navigation';
 
 type Props = {
     type: string;
@@ -11,15 +16,64 @@ type Props = {
 
 const ProjectForm = ({type, session} : Props) => {
 
-    const handleFormSubmit = (e: React.FormEvent) => {}
-    const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {}
-    const form = {
-        image: '',
+    const router  = useRouter()
+
+    const [form, setForm] = useState({
         title: '',
-    };
+        description: '',
+        image: '',
+        liveSiteUrl: '',
+        githubUrl: '',
+        category: ''
+    })
 
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
+
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const { token } = await fetchToken()
+        try {
+            if (type==="create") {
+                await createNewProject(form, session?.user?.id, token)
+
+                router.push('/')
+            }
+
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsSubmitting(false)
+        }
+
+        
+    }
+
+    const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault();
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        if(!file.type.includes('image')) {
+            return alert('Please upload an image file')
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const result = reader.result as string;
+            handleStateChange('image', result)
+        }
+    }
+
+
+    
     const handleStateChange = (fieldName: string, value: string) => {
-
+        setForm((prevState) => ({...prevState, [fieldName]: value}))
     }
   return (
     <form
@@ -69,15 +123,21 @@ const ProjectForm = ({type, session} : Props) => {
                 placeholder="https://github.com/"
                 setState={(value) => handleStateChange('githubUrl', value)}
         />
-        <FormField
-                title="Title"
-                state={form.title}
-                placeholder="DesignHub"
-                setState={(value) => handleStateChange('title', value)}
-        />
         
+        <CustomMenu
+            title="Category"
+            state={form.category}
+            filters={categoryFilters}
+            setState={(value) => handleStateChange('category', value)}
+        />
+
         <div className="flexStart w-full">
-            <button>Create</button>
+                <Button
+                    title={isSubmitting ? `${type === "create" ? "Creating" : "Editing"}` : `${type === "create" ? "Create" : "Edit"}`}
+                    type="submit"
+                    leftIcon={isSubmitting ? "" : "/plus.svg"}
+                    isSubmitting={isSubmitting}
+                />
         </div>
     </form>
   )
