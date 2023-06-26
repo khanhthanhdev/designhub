@@ -6,6 +6,12 @@ const nextConfig = {
             'avatars.githubusercontent.com'
         
         ]
+    },
+    experimental: {
+        serverComponentsExternalPackages: [
+            'cloudinary',
+            'graphql-request'
+        ]
     }
 }
 
