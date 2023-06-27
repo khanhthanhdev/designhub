@@ -17,7 +17,7 @@ const Navbar = async () => {
         <div className="flex-1 flexStart gap-10">
             <Link href="/">
                 <Image
-                    src="/logo.svg"
+                    src="/designland.png"
                     width={115}
                     height={43}
                     alt="Logo"
